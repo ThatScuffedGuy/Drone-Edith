@@ -3,6 +3,11 @@
 Date: 2026-11-26
 Status: Draft for approval
 
+**Build order (owner's decision):** Phase 1 is everything in this document
+in **basic mode** — Edith understands commands with a built-in phrase
+matcher, no AI service or API key needed. Phase 2 adds the Claude
+conversation layer (§7.7) on top, without changing anything else.
+
 ## 1. Intent
 
 The owner dreamed of a palm-sized drone, "Edith", that rides on their back
@@ -66,7 +71,9 @@ No keyboard needed except to walk the avatar around.
   hostages/people next; hazards after. Spoken + wrist pad + map marker.
 - **G6 — Wrist pad.** Live map, Edith's position and status (mission,
   battery), alert feed, Edith's camera view, and buttons for the most
-  important actions (recall, pause/hold, acknowledge alert).
+  important actions (recall, pause/hold, acknowledge alert). Works on the
+  owner's Android phone now, and is built so a dedicated wrist computer can
+  replace the phone later (§7.9).
 - **G7 — Launch from and dock on the back.** Edith detaches from the
   avatar's back dock, and returns and lands precisely on it.
 - **G8 — Pet mode.** When not on a mission Edith can ride on your back,
@@ -86,7 +93,9 @@ No keyboard needed except to walk the avatar around.
 - Realistic aerodynamics. Flight is smooth and plausible, not physics-exact.
 - Multiplayer, multiple drones, or enemies that act/move (the scene is
   static except for Edith and the avatar).
-- A dedicated smartwatch app. The wrist pad is a web page.
+- Building the dedicated wrist computer itself. v1 only makes sure one can
+  connect later (§7.9).
+- The Claude conversation layer (Phase 2).
 - Copying the look of any movie drone or character. Edith's look is our own.
 
 ## 5. Anti-goals (would make this a failure even if it "works")
@@ -106,15 +115,16 @@ No keyboard needed except to walk the avatar around.
 
 ## 6. Constraints
 
-- Runs on an ordinary laptop in **Chrome or Edge** (needed for built-in
-  speech recognition). Needs a microphone and speakers.
-- The wrist pad runs in a phone browser on the same Wi‑Fi, or as an
-  on-screen panel on the laptop when no phone is used.
-- Uses Claude (Anthropic API) for language understanding and personality.
-  Needs an API key and internet; costs a few cents per mission.
-- The owner is not expected to be a programmer. Starting the simulator
-  must be one command (or a double-click script) plus pasting an API key
-  once.
+- Runs on the owner's **Windows** computer in **Chrome or Edge** (needed
+  for built-in speech recognition, which itself needs internet). Needs a
+  microphone and speakers.
+- The wrist pad runs in Chrome on the owner's **Android phone** on the same
+  Wi‑Fi, or as an on-screen panel on the computer when no phone is used.
+- Phase 1 needs no API key. Phase 2 uses Claude (Anthropic API): needs a
+  key and internet; costs a few cents per mission.
+- The owner is not expected to be a programmer. Starting the simulator must
+  be a **double-click `.bat` file on Windows** (plus a one-time install of
+  Node.js, with plain instructions).
 
 ## 7. Design
 
@@ -238,7 +248,20 @@ Rules:
 - **Listening:** browser speech recognition, always listening for the wake
   word "Edith". Also a push-to-talk key (Space) and a mic button on the
   laptop overlay as a fallback.
-- **Understanding:** the spoken sentence, plus a compact summary of Edith's
+- **Understanding, Phase 1 (basic mode):** a built-in phrase matcher turns
+  what the owner says into the same fixed list of actions the Phase 2 layer
+  will use. It must feel forgiving, not like a command list: synonyms and
+  varied phrasings ("search the building", "sweep the place", "check it
+  out"; "come back", "return", "get back here"), optional extras ("…and map
+  it", "…let me know if you find the hostages", "stop when you find them"),
+  targets (hostages, people, weapons/guns, hazards) and place names from
+  the map ("check the back office"). Covers: search/map, find X, go to
+  place, watch place/finding, come back, hold/stop, follow me, stay,
+  status ("what have you found?", "how many people?", "where was the
+  gun?", "battery?"), and a little pet chatter (hello, thanks, good job)
+  answered from varied canned lines with Edith's personality. When it does
+  not understand, Edith says so and suggests what it can do.
+- **Understanding, Phase 2 (Claude):** the spoken sentence, plus a compact summary of Edith's
   current state (mission, battery, findings, known places), goes to Claude.
   Claude answers with (a) what Edith says and (b) zero or more actions from
   a fixed list (start mission, recall, hold, set alert preferences, answer
@@ -250,10 +273,8 @@ Rules:
   questions about it.
 - **Speaking:** browser text-to-speech with a chosen voice. Alerts preempt
   whatever Edith is saying.
-- **Offline fallback:** if there is no API key or no internet, a simple
-  keyword matcher handles the core commands (search, find hostages, come
-  back, stop, follow me, status) with canned replies. Edith says it is in
-  "basic mode".
+- **Fallback:** in Phase 2, if there is no API key or no internet, Edith
+  falls back to the Phase 1 phrase matcher and says it is in "basic mode".
 - **Model:** a fast Claude model by default for quick replies, configurable
   in a settings file.
 
@@ -290,9 +311,19 @@ Phone-sized, dark, glanceable:
 └──────────────────────────┘
 ```
 
-- Opened by scanning a QR code shown on the laptop (same Wi‑Fi).
-- The same panel can be shown as an overlay on the laptop screen.
+- Opened in Chrome on the Android phone by scanning a QR code shown on the
+  computer (same Wi‑Fi). Can be added to the home screen and kept awake.
+- The same panel can be shown as an overlay on the computer screen.
 - Camera button swaps the map for Edith's live view.
+- Android vibration on priority 1–2 alerts (different buzz patterns for
+  threat vs hostage).
+- **Ready for a dedicated wrist computer:** everything the wrist pad shows
+  and does goes over one small, documented message format (state, map
+  updates, alerts, camera frames, button presses) on the local server's
+  WebSocket. The phone page is just one client of it. A future wrist device
+  (e.g. a small round-screen microcontroller watch, or a cheap Android
+  watch) only needs to speak that format. The layout must also work on a
+  small round or square screen (~240–480 px), not only a phone.
 
 ### 7.10 Launch and docking (G7)
 
@@ -319,6 +350,9 @@ programmable drone, then possibly a custom build.
 
 ## 9. Decided by the owner
 
+- Build basic mode (no AI service) first; Claude later.
+- Runs on a Windows computer; wrist pad on an Android phone now, and must be
+  able to move to a dedicated wrist computer later.
 - Simulator first (approach A).
 - Voice activation with the name "Edith"; Jarvis-like conversation.
 - Pet-like companion as well as a search tool.
@@ -332,8 +366,10 @@ programmable drone, then possibly a custom build.
 - Brain runs off-drone (on the laptop now; a carried phone/computer later).
 - Wrist pad = phone web page (plus laptop overlay), not a smartwatch app.
 - Docking only while standing still in v1.
-- Claude for language/personality; deterministic code for flying and
-  missions; offline keyword fallback.
+- Phase 1 understanding = forgiving built-in phrase matcher; Phase 2 adds
+  Claude on top; deterministic code always does the flying and missions.
+- Wrist pad talks over a documented message format so a dedicated wrist
+  computer can replace the phone later.
 - Single-floor warehouse scenario first; scenarios as data files.
 - Find-missions keep searching the whole floor after the first find unless
   told otherwise.
@@ -349,8 +385,7 @@ programmable drone, then possibly a custom build.
   tie-breaking — tune so a full warehouse search takes ~2–4 real minutes.
 - Visual style details, colours, Edith's model, the chosen TTS voice.
 - Exact Claude model name and prompt wording (within §7.7).
-- How the server is started (npm script, plus a double-click script for
-  Windows/macOS).
+- How the server is started (npm script, plus the Windows `.bat`).
 
 ## 12. Testing
 
@@ -358,8 +393,12 @@ programmable drone, then possibly a custom build.
   exploration "done" detection, perception visibility/confidence, mission
   state transitions (start, interrupt, recall, low battery, stuck), alert
   de-duplication and priority.
-- The Claude layer is tested with recorded example replies, so tests run
-  without an API key or internet; the offline fallback is tested directly.
+- The phrase matcher is tested against a table of example sentences
+  (including varied phrasings and sentences it should reject). In Phase 2,
+  the Claude layer is tested with recorded example replies, so tests run
+  without an API key or internet.
+- The wrist pad message format has tests, so a future wrist device has a
+  reference.
 - A scripted end-to-end run of the warehouse scenario (text commands
   instead of voice) that checks: all hostages, weapons and hazards are found
   and alerted, the map covers the reachable floor, and Edith docks at the
